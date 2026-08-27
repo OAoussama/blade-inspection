@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pt
+runs/
+.env
+node_modules/
+.next/
+datasets/
