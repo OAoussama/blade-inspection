@@ -1,4 +1,4 @@
-import Image from "next/image";
+/* import Image from "next/image";
 
 export default function Home() {
   return (
@@ -65,5 +65,16 @@ export default function Home() {
         </div>
       </main>
     </div>
+  );
+}
+ */
+import { ApiStatus } from "@/components/ApiStatus";
+
+export default function Home() {
+  return (
+    <main className="mx-auto max-w-2xl p-8">
+      <h1 className="mb-6 text-2xl font-semibold">Blade Inspection</h1>
+      <ApiStatus />
+    </main>
   );
 }
