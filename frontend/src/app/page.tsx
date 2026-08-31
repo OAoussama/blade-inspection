@@ -68,13 +68,13 @@ export default function Home() {
   );
 }
  */
-import { ApiStatus } from "@/components/ApiStatus";
+import { UploadPanel } from "@/components/UploadPanel";
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-2xl p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Blade Inspection</h1>
-      <ApiStatus />
+    <main className="mx-auto max-w-3xl space-y-8 p-8">
+      <h1 className="text-2xl font-semibold">Blade Inspection</h1>
+      <UploadPanel turbineId="c7fd8458-bd92-4b77-9160-68f4d8d13ba3" />
     </main>
   );
 }

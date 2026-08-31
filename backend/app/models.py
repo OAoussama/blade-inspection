@@ -16,6 +16,7 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
+    UniqueConstraint,
     func,
     text,
 )
@@ -158,7 +159,8 @@ class Inspection(Base, TimestampMixin):
 
 class Image(Base, TimestampMixin):
     __tablename__ = "images"
-    __table_args__ = (Index("ix_images_inspection", "inspection_id"),)
+    __table_args__ = (Index("ix_images_inspection", "inspection_id"),
+                      UniqueConstraint("inspection_id", "checksum", name="uq_images_inspection_checksum"),)
 
     id: Mapped[uuid.UUID] = uuid_pk()
     inspection_id: Mapped[uuid.UUID] = mapped_column(
@@ -167,9 +169,9 @@ class Image(Base, TimestampMixin):
 
     storage_key: Mapped[str] = mapped_column(String(512), nullable=False)
     original_filename: Mapped[str | None] = mapped_column(String(255))
-    # SHA-256 du fichier : rejette les doublons, evite de recompter les memes
-    # dommages et de gaspiller du GPU.
-    checksum: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    # SHA-256 du fichier : rejette les doublons AU SEIN d'une meme inspection.
+    # La meme photo reste autorisee dans deux inspections differentes (re-inspection).
+    checksum: Mapped[str] = mapped_column(String(64), nullable=False)
 
     blade_side: Mapped[BladeSide | None] = mapped_column(pg_enum(BladeSide, "blade_side"))
     width: Mapped[int] = mapped_column(Integer, nullable=False)
