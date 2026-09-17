@@ -6,7 +6,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import health, images, inspections
 from app.config import settings
 
-app = FastAPI(title="Blade Inspection API", version="0.1.0")
+# app = FastAPI(title="Blade Inspection API", version="0.1.0")
+
+from contextlib import asynccontextmanager
+from app.services import inference
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    inference.warmup()
+    yield
+
+
+app = FastAPI(title="Blade Inspection API", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

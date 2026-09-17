@@ -22,5 +22,11 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 20 * 1024 * 1024
     max_images_per_inspection: int = 50
 
+    # Modèle de détection
+    model_repo: str = "OAoussama/yolo8v"
+    model_revision: str = "v2"     # tag Hugging Face, jamais "main"
+    model_imgsz: int = 1024        # doit correspondre à l'entraînement
+    model_conf: float = 0.4        # au-dessus du défaut 0.25
+
 
 settings = Settings()

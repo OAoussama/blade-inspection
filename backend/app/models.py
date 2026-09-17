@@ -48,11 +48,20 @@ class Severity(str, enum.Enum):
 
 
 class DamageClass(str, enum.Enum):
-    CRACK = "crack"
-    EROSION = "erosion"
-    LIGHTNING_STRIKE = "lightning_strike"
-    DELAMINATION = "delamination"
+    """Classes du jeu de données WTBD (Ji, Cheng & Wu, Scientific Data 2026).
 
+    L'ordre suit celui de class_definitions.txt et donc des indices
+    produits par le modèle. Ne jamais réordonner : les indices YOLO sont
+    positionnels, et un décalage renommerait silencieusement chaque
+    détection.
+    """
+
+    CRAZE = "craze"                    # faïençage de surface
+    CORROSION = "corrosion"
+    SURFACE_INJURE = "surface_injure"  # dommage de surface générique
+    THUNDERSTRIKE = "thunderstrike"    # impact de foudre
+    CRACK = "crack"                    # fissure structurelle
+    HIDE_CRAZE = "hide_craze"          # faïençage peu visible
 
 class BladeSide(str, enum.Enum):
     LEADING_EDGE = "leading_edge"
