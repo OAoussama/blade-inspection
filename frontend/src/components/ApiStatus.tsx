@@ -23,19 +23,20 @@ export function ApiStatus() {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 text-sm"
+      className="flex items-center gap-2 text-sm"
     >
       <span
         aria-hidden="true"
         className={`h-2.5 w-2.5 shrink-0 rounded-full ${DOT[state.kind]}`}
       />
 
-      <span className="flex-1">
+      <span className="text-slate-700 dark:text-slate-300">
         {state.kind === "loading" && "Verification de l'API..."}
         {state.kind === "online" && (
           <>
             API en ligne
-            <span className="ml-2 text-slate-500">
+            {/* Le detail chiffre encombre la barre sur mobile. */}
+            <span className="ml-2 hidden text-slate-500 sm:inline">
               {state.status} - {state.latencyMs} ms
             </span>
           </>
@@ -43,18 +44,22 @@ export function ApiStatus() {
         {state.kind === "offline" && (
           <>
             API injoignable
-            <span className="ml-2 text-slate-500">{state.message}</span>
+            <span className="ml-2 hidden text-slate-500 sm:inline">
+              {state.message}
+            </span>
           </>
         )}
       </span>
 
-      <button
-        type="button"
-        onClick={refresh}
-        className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
-      >
-        Reessayer
-      </button>
+      {state.kind === "offline" && (
+        <button
+          type="button"
+          onClick={refresh}
+          className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none dark:text-slate-400 dark:hover:bg-slate-800"
+        >
+          Reessayer
+        </button>
+      )}
     </div>
   );
 }

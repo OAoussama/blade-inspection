@@ -14,6 +14,22 @@ const STROKE: Record<Severity, string> = {
   critical: "#ef4444",
 };
 
+// Chaque badge porte son libellé en texte : une pastille de couleur seule
+// serait indéchiffrable en vision daltonienne.
+const SEVERITY_LABEL: Record<Severity, string> = {
+  low: "Faible",
+  medium: "Moyenne",
+  high: "Élevée",
+  critical: "Critique",
+};
+
+const SEVERITY_BADGE: Record<Severity, string> = {
+  low: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200",
+  medium: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  high: "bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200",
+  critical: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200",
+};
+
 export function DetectionOverlay({ image }: { image: InspectionImage }) {
   return (
     <figure className="space-y-2">
@@ -49,12 +65,23 @@ export function DetectionOverlay({ image }: { image: InspectionImage }) {
         </svg>
       </div>
 
-      <figcaption className="text-sm text-slate-600">
-        {image.detections.length === 0
-          ? "Aucun dommage détecté"
-          : image.detections
-              .map((d) => `${d.damage_class} (${d.severity}, ${Math.round(d.confidence * 100)} %)`)
-              .join(" · ")}
+      <figcaption className="text-sm text-slate-600 dark:text-slate-400">
+        {image.detections.length === 0 ? (
+          "Aucun dommage détecté"
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {image.detections.map((d) => (
+              <li
+                key={d.id}
+                className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ${SEVERITY_BADGE[d.severity]}`}
+              >
+                <span className="font-medium">{d.damage_class}</span>
+                <span>· {SEVERITY_LABEL[d.severity]}</span>
+                <span className="opacity-75">{Math.round(d.confidence * 100)} %</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </figcaption>
     </figure>
   );
