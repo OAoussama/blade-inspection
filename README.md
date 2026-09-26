@@ -115,16 +115,18 @@ On Windows, `.\dev.ps1` at the root starts all three at once.
 
 ## First run
 
-The `turbines` table starts empty. Create a test turbine:
+The `turbines` table starts empty. Seed the demo turbines — five units
+across two Moroccan wind farms:
 
 ```bash
-docker compose exec db psql -U postgres -d blades -c \
-  "INSERT INTO turbines (id, tag, site_name, created_at) \
-   VALUES (gen_random_uuid(), 'T-01', 'Test site', now()) RETURNING id;"
+cd backend
+python -m scripts.seed
 ```
 
-Paste the returned id into `frontend/src/app/page.tsx`, then upload a few
-images from http://localhost:3000.
+The script is idempotent: it matches on `tag`, so running it again
+creates nothing and fails on nothing.
+
+Then open http://localhost:3000, pick a turbine and upload a few images.
 
 ---
 
@@ -159,6 +161,7 @@ blade-inspection/
 | Method | Route | Description |
 |---|---|---|
 | `GET` | `/health` | Service status |
+| `GET` | `/turbines` | Turbines with inspection count and last inspection date |
 | `POST` | `/inspections` | Upload images — returns `202` and an id |
 | `GET` | `/inspections/{id}` | Inspection status and results |
 | `GET` | `/images/{id}/file` | Image file |

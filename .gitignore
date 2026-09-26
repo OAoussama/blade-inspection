@@ -7,3 +7,8 @@ node_modules/
 .next/
 datasets/
 backend/storage
+ml/data/
+ml/**/__pycache__/
+*.pt
+*.zip
+runs/
