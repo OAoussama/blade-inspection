@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, images, inspections
+from app.api.routes import health, images, inspections, turbines
 from app.config import settings
 
 # app = FastAPI(title="Blade Inspection API", version="0.1.0")
@@ -29,5 +29,6 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(turbines.router)
 app.include_router(inspections.router)
 app.include_router(images.router)
