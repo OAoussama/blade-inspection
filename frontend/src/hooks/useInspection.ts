@@ -13,14 +13,17 @@ export type InspectionState =
   | { kind: "ready"; inspection: Inspection }
   | { kind: "error"; message: string };
 
+const IDLE: InspectionState = { kind: "idle" };
+const STARTING: InspectionState = { kind: "polling", inspection: null };
+
+/** What the effect has learned, tagged with the id it belongs to. */
+type Entry = { id: string; state: InspectionState };
+
 export function useInspection(inspectionId: string | null, intervalMs = 2_000) {
-  const [state, setState] = useState<InspectionState>({ kind: "idle" });
+  const [entry, setEntry] = useState<Entry | null>(null);
 
   useEffect(() => {
-    if (!inspectionId) {
-      setState({ kind: "idle" });
-      return;
-    }
+    if (!inspectionId) return;
 
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
@@ -32,25 +35,27 @@ export function useInspection(inspectionId: string | null, intervalMs = 2_000) {
         if (cancelled) return;
 
         if (TERMINAL.has(data.status)) {
-          setState({ kind: "ready", inspection: data });
-          return; // état terminal : on arrête le polling
+          setEntry({ id: inspectionId!, state: { kind: "ready", inspection: data } });
+          return; // terminal state: stop polling
         }
 
-        setState({ kind: "polling", inspection: data });
-        // setTimeout récursif plutôt que setInterval : la requête suivante
-        // ne part qu'une fois la précédente terminée, donc jamais
-        // d'empilement si le backend ralentit.
+        setEntry({ id: inspectionId!, state: { kind: "polling", inspection: data } });
+        // Recursive setTimeout rather than setInterval: the next request only
+        // goes out once the previous one came back, so nothing piles up if
+        // the backend slows down.
         timer = setTimeout(poll, intervalMs);
       } catch (error) {
         if (cancelled || (error instanceof DOMException && error.name === "AbortError")) return;
-        setState({
-          kind: "error",
-          message: error instanceof ApiError ? error.message : "Erreur inattendue",
+        setEntry({
+          id: inspectionId!,
+          state: {
+            kind: "error",
+            message: error instanceof ApiError ? error.message : "Unexpected error",
+          },
         });
       }
     }
 
-    setState({ kind: "polling", inspection: null });
     void poll();
 
     return () => {
@@ -60,5 +65,9 @@ export function useInspection(inspectionId: string | null, intervalMs = 2_000) {
     };
   }, [inspectionId, intervalMs]);
 
-  return state;
+  // Derived, not assigned from the effect. With no id there is nothing to
+  // poll, and an entry left over from a previous id is stale by definition —
+  // so neither case costs a render spent on a value we already know is wrong.
+  if (inspectionId === null) return IDLE;
+  return entry?.id === inspectionId ? entry.state : STARTING;
 }

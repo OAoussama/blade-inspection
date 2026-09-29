@@ -1,12 +1,29 @@
 // frontend/src/lib/services/inspections.ts
-// Miroir des schémas Pydantic. Si le backend change son contrat,
-// la compilation TypeScript échoue — c'est le but.
+// Mirrors the Pydantic schemas in backend/app/schemas/.
 
 import { apiFetch } from "@/lib/api";
 
 export type Severity = "low" | "medium" | "high" | "critical";
-export type DamageClass = "crack" | "erosion" | "lightning_strike" | "delamination";
 export type InspectionStatus = "queued" | "processing" | "done" | "failed";
+
+/**
+ * WTBD dataset classes — must stay in sync with DamageClass in
+ * backend/app/models.py. The order mirrors the backend enum, which mirrors
+ * the YOLO class indices: those are positional, so reordering there renames
+ * every detection.
+ *
+ * Note this union is a declaration, not a guarantee: apiFetch casts the
+ * response without validating it, so a backend rename shows up as a wrong
+ * label on screen rather than a compile error. Zod (or similar) at the
+ * service boundary is what would make it enforceable.
+ */
+export type DamageClass =
+  | "craze"
+  | "corrosion"
+  | "surface_injure"
+  | "thunderstrike"
+  | "crack"
+  | "hide_craze";
 
 export type Detection = {
   id: string;

@@ -1,9 +1,6 @@
-//état et cycle de vie
-
 // frontend/src/hooks/useApiHealth.ts
-// La logique de recuperation vit dans un hook, separee de l'affichage.
-// Le composant ne sait pas comment l'API est jointe, seulement dans quel
-// etat elle se trouve.
+// Fetching lives in the hook, separate from rendering. The component does not
+// know how the API is reached, only what state it is in.
 
 "use client";
 
@@ -20,43 +17,69 @@ export function useApiHealth(pollIntervalMs = 30_000) {
   const [state, setState] = useState<HealthState>({ kind: "loading" });
   const [nonce, setNonce] = useState(0);
 
-  /** Permet un rafraichissement manuel depuis l'interface. */
+  /** Manual retry from the interface. */
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
+    // Recursive setTimeout rather than setInterval: the next check is only
+    // scheduled once the previous one has settled, so a slow API can never
+    // leave several /health requests in flight at the same time.
+    function schedule() {
+      clearTimeout(timer);
+      // A hidden tab polls nothing at all — visibilitychange starts it again.
+      if (cancelled || document.hidden) return;
+      timer = setTimeout(check, pollIntervalMs);
+    }
 
     async function check() {
       const startedAt = performance.now();
       try {
         const data = await getHealth(controller.signal);
+        if (cancelled) return;
         setState({
           kind: "online",
           status: data.status,
           latencyMs: Math.round(performance.now() - startedAt),
         });
       } catch (error) {
-        // Le demontage du composant annule la requete : ce n'est pas une
-        // panne de l'API, il ne faut surtout pas afficher une erreur.
-        // React StrictMode monte deux fois en dev, ce cas arrive a chaque
-        // rechargement.
-        if (error instanceof DOMException && error.name === "AbortError") {
+        // Unmounting aborts the request: that is not an API failure, and must
+        // not surface as one. React StrictMode mounts twice in development,
+        // so this happens on every reload.
+        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
           return;
         }
         setState({
           kind: "offline",
-          message:
-            error instanceof ApiError ? error.message : "Erreur inattendue",
+          message: error instanceof ApiError ? error.message : "Unexpected error",
         });
+      } finally {
+        schedule();
       }
     }
 
+    function onVisibilityChange() {
+      if (document.hidden) {
+        clearTimeout(timer);
+        return;
+      }
+      // Coming back after a while, the dot may be showing stale information,
+      // so re-check immediately instead of waiting out the interval.
+      clearTimeout(timer);
+      void check();
+    }
+
     void check();
-    const timer = setInterval(check, pollIntervalMs);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
+      cancelled = true;
       controller.abort();
-      clearInterval(timer);
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [pollIntervalMs, nonce]);
 

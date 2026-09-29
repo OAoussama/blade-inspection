@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* --------------------------------------------------------------------------
+   Two themes, one set of components.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+   Everything that differs between light and dark is a token — no component
+   hard-codes a colour or a radius. Adding a third theme means adding a token
+   block here and nothing else.
+
+     light  "Blueprint"    engineering document: pale ground, sharp corners,
+                           hairline rules, ink-blue as the action colour
+     dark   "Control Room" instrument panel: near-black blocks, soft corners,
+                           lime as the action colour
+
+   The dark token block is written twice on purpose: once behind the OS
+   preference (for viewers who never touch the toggle) and once behind an
+   explicit [data-theme="dark"] (so the toggle beats the OS in both
+   directions). Keeping them as two plain blocks is what makes the toggle
+   work without any JS beyond setting the attribute.
+   -------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  --ground: #eef1f5;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --sunken: #f4f7fa;
+  --hairline: #d5dde6;
+
+  --ink: #16202c;
+  --ink-soft: #2b4258;
+  --ink-muted: #5c6a78;
+  --ink-dim: #8b98a5;
+
+  /* Action and selection: primary button, step pill, chosen card. */
+  --accent: #1f4f82;
+  --on-accent: #ffffff;
+  /* Decorative block fill behind step 1. */
+  --field: #c2dafe;
+
+  /* Severity varies in hue AND lightness, never hue alone, so the scale
+     survives colour-blindness. --on-sev flips because the light theme's
+     severity colours are dark fills and the dark theme's are light ones. */
+  --sev-low: #1f4f82;
+  --sev-medium: #8a6a12;
+  --sev-high: #c2621f;
+  --sev-critical: #a8321e;
+  --on-sev: #ffffff;
+
+  --radius-block: 4px;
+  --radius-card: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --ground: #141414;
+    --panel: #212121;
+    --card: #2c2c2b;
+    --sunken: #1a1a19;
+    --hairline: #3a3a39;
+
+    --ink: #f4f4f4;
+    --ink-soft: #b4b4b1;
+    --ink-muted: #9a9a97;
+    --ink-dim: #6f6f6d;
+
+    --accent: #cdf07a;
+    --on-accent: #1e1f1e;
+    --field: #212121;
+
+    --sev-low: #7fb0dd;
+    --sev-medium: #e8c46a;
+    --sev-high: #f0a061;
+    --sev-critical: #f07a62;
+    --on-sev: #1e1f1e;
+
+    --radius-block: 24px;
+    --radius-card: 16px;
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ground: #141414;
+  --panel: #212121;
+  --card: #2c2c2b;
+  --sunken: #1a1a19;
+  --hairline: #3a3a39;
+
+  --ink: #f4f4f4;
+  --ink-soft: #b4b4b1;
+  --ink-muted: #9a9a97;
+  --ink-dim: #6f6f6d;
+
+  --accent: #cdf07a;
+  --on-accent: #1e1f1e;
+  --field: #212121;
+
+  --sev-low: #7fb0dd;
+  --sev-medium: #e8c46a;
+  --sev-high: #f0a061;
+  --sev-critical: #f07a62;
+  --on-sev: #1e1f1e;
+
+  --radius-block: 24px;
+  --radius-card: 16px;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-sunken: var(--sunken);
+  --color-hairline: var(--hairline);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-dim: var(--ink-dim);
+
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-field: var(--field);
+
+  --color-sev-low: var(--sev-low);
+  --color-sev-medium: var(--sev-medium);
+  --color-sev-high: var(--sev-high);
+  --color-sev-critical: var(--sev-critical);
+  --color-on-sev: var(--on-sev);
+
+  --radius-block: var(--radius-block);
+  --radius-card: var(--radius-card);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-space-mono);
+  --font-display: var(--font-anton);
+
+  /* Anton ships a single weight. Headings get their presence from the
+     condensed width and the size, never from a bold that does not exist. */
+  --text-display-lg: 42px;
+  --text-display-md: 38px;
+  --text-display-sm: 24px;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans), "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

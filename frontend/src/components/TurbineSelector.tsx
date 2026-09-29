@@ -4,18 +4,18 @@
 import { useTurbines } from "@/hooks/useTurbines";
 import type { Turbine } from "@/lib/services/turbines";
 
-// Créé une seule fois : instancier un formateur à chaque rendu est coûteux.
-const DATE_FORMAT = new Intl.DateTimeFormat("fr-FR", {
+// Built once: creating a formatter on every render is expensive.
+const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
-  month: "long",
+  month: "short",
   year: "numeric",
 });
 
 function lastInspectionLabel(turbine: Turbine): string {
   if (turbine.last_inspection_at === null) {
-    return "Jamais inspectée";
+    return "Never inspected";
   }
-  return `Dernière inspection : ${DATE_FORMAT.format(new Date(turbine.last_inspection_at))}`;
+  return DATE_FORMAT.format(new Date(turbine.last_inspection_at));
 }
 
 export function TurbineSelector({
@@ -29,22 +29,22 @@ export function TurbineSelector({
 
   if (state.kind === "loading") {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Squelettes plutôt qu'un simple texte : la mise en page ne saute
-            pas quand les données arrivent. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Skeletons rather than a line of text: the layout does not jump
+            when the data lands. */}
         {[0, 1, 2].map((i) => (
           <div
             key={i}
             aria-hidden="true"
-            className="animate-pulse space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+            className="animate-pulse space-y-3 rounded-card border-2 border-transparent bg-card p-5"
           >
-            <div className="h-5 w-20 rounded bg-slate-200 dark:bg-slate-700" />
-            <div className="h-4 w-full rounded bg-slate-200 dark:bg-slate-700" />
-            <div className="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
+            <div className="h-6 w-24 rounded bg-hairline" />
+            <div className="h-4 w-full rounded bg-hairline" />
+            <div className="h-4 w-2/3 rounded bg-hairline" />
           </div>
         ))}
         <p role="status" className="sr-only">
-          Chargement des éoliennes
+          Loading turbines
         </p>
       </div>
     );
@@ -52,19 +52,14 @@ export function TurbineSelector({
 
   if (state.kind === "error") {
     return (
-      <div
-        role="alert"
-        className="space-y-3 rounded-lg border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
-      >
-        <p className="text-red-700 dark:text-red-300">
-          Impossible de charger les éoliennes : {state.message}
-        </p>
+      <div role="alert" className="space-y-3 rounded-card bg-card p-5 text-sm">
+        <p className="text-sev-critical">Could not load turbines: {state.message}</p>
         <button
           type="button"
           onClick={refresh}
-          className="rounded-md border border-red-300 px-3 py-1.5 font-medium text-red-700 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900"
+          className="rounded-full bg-accent px-4 py-1.5 font-medium text-on-accent hover:brightness-110 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel focus-visible:outline-none"
         >
-          Réessayer
+          Retry
         </button>
       </div>
     );
@@ -72,13 +67,13 @@ export function TurbineSelector({
 
   if (state.turbines.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
-        Aucune éolienne enregistrée. Lancez{" "}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono dark:bg-slate-800">
+      <p className="rounded-card bg-card p-5 text-sm text-ink-soft">
+        No turbines yet. Run{" "}
+        <code className="rounded bg-sunken px-1.5 py-0.5 font-mono text-accent">
           python -m scripts.seed
         </code>{" "}
-        depuis <code className="font-mono">backend/</code> pour insérer les
-        éoliennes de démonstration.
+        from <code className="font-mono">backend/</code> to insert the demo
+        turbines.
       </p>
     );
   }
@@ -86,58 +81,72 @@ export function TurbineSelector({
   return (
     <div
       role="radiogroup"
-      aria-label="Éolienne à inspecter"
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      aria-label="Turbine to inspect"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
       {state.turbines.map((turbine) => {
         const isSelected = turbine.id === selectedId;
+        const neverInspected = turbine.last_inspection_at === null;
 
         return (
-          // Un bouton et non un div : focusable au clavier et annoncé comme
-          // interactif, sans avoir à recréer tabIndex ni les touches Entrée
-          // et Espace à la main.
+          // A button, not a div: keyboard focusable and announced as
+          // interactive without re-implementing tabIndex, Enter and Space.
           <button
             key={turbine.id}
             type="button"
             aria-pressed={isSelected}
             onClick={() => onSelect(turbine.id)}
-            className={`rounded-lg border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none ${
+            className={`flex flex-col gap-2.5 rounded-card border-2 bg-card p-5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel focus-visible:outline-none ${
               isSelected
-                ? // La sélection ne repose pas sur la couleur seule : bordure
-                  // doublée et coche explicite, lisibles en vision daltonienne.
-                  "border-2 border-sky-600 bg-sky-50 dark:border-sky-400 dark:bg-sky-950"
-                : "border border-slate-200 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-500 dark:hover:bg-slate-900"
+                ? // Selection does not rest on colour alone: a solid border
+                  // plus an explicit tick, both readable without hue.
+                  "border-accent"
+                : "border-hairline hover:border-ink-dim"
             }`}
           >
-            <span className="flex items-baseline justify-between gap-2">
-              <span className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                {turbine.tag}
-              </span>
+            <span className="flex items-center justify-between gap-2">
+              <span className="font-display text-display-sm">{turbine.tag}</span>
               {isSelected && (
                 <span
                   aria-hidden="true"
-                  className="text-sm font-bold text-sky-700 dark:text-sky-300"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent"
                 >
-                  ✓
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                 </span>
               )}
             </span>
 
-            <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
-              {turbine.site_name ?? "Site inconnu"}
+            <span className="block text-sm font-medium">
+              {turbine.site_name ?? "Unknown site"}
             </span>
 
-            <span className="mt-2 block text-xs text-slate-500 dark:text-slate-500">
-              {turbine.model ?? "Modèle inconnu"}
+            <span className="block text-xs text-ink-muted">
+              {turbine.model ?? "Unknown model"}
             </span>
 
-            <span className="mt-3 block text-xs text-slate-600 dark:text-slate-400">
-              {turbine.inspection_count} inspection
-              {turbine.inspection_count === 1 ? "" : "s"}
-            </span>
+            <span className="my-1 block h-px bg-hairline" />
 
-            <span className="block text-xs text-slate-500 dark:text-slate-500">
-              {lastInspectionLabel(turbine)}
+            <span className="flex items-baseline gap-2">
+              <span
+                className={`font-mono text-xl ${neverInspected ? "text-ink-muted" : "text-accent"}`}
+              >
+                {turbine.inspection_count}
+              </span>
+              <span className="text-xs text-ink-muted">
+                {neverInspected
+                  ? "Never inspected"
+                  : `inspection${turbine.inspection_count === 1 ? "" : "s"} · ${lastInspectionLabel(turbine)}`}
+              </span>
             </span>
           </button>
         );

@@ -1,50 +1,44 @@
-//affichage
-
 // frontend/src/components/ApiStatus.tsx
-// Composant purement presentationnel : il consomme le hook et affiche.
-// Aucun fetch, aucune URL, aucun try/catch ici.
+// Presentational only: it reads the hook and renders. No fetch, no URL,
+// no try/catch here.
 
 "use client";
 
 import { useApiHealth } from "@/hooks/useApiHealth";
 
 const DOT = {
-  loading: "bg-slate-400 animate-pulse",
-  online: "bg-emerald-500",
-  offline: "bg-red-500",
+  loading: "bg-ink-dim animate-pulse",
+  online: "bg-accent",
+  offline: "bg-sev-critical",
 } as const;
 
 export function ApiStatus() {
   const { state, refresh } = useApiHealth();
 
   return (
-    // role="status" + aria-live : un lecteur d'ecran annonce le changement
-    // d'etat sans que l'utilisateur ait a chercher l'information.
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex items-center gap-2 text-sm"
-    >
+    // role="status" + aria-live: a screen reader announces the change without
+    // the user having to go looking for it.
+    <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm">
       <span
         aria-hidden="true"
-        className={`h-2.5 w-2.5 shrink-0 rounded-full ${DOT[state.kind]}`}
+        className={`h-2 w-2 shrink-0 rounded-full ${DOT[state.kind]}`}
       />
 
-      <span className="text-slate-700 dark:text-slate-300">
-        {state.kind === "loading" && "Verification de l'API..."}
+      <span className="text-ink-soft">
+        {state.kind === "loading" && "Checking API…"}
         {state.kind === "online" && (
           <>
-            API en ligne
-            {/* Le detail chiffre encombre la barre sur mobile. */}
-            <span className="ml-2 hidden text-slate-500 sm:inline">
-              {state.status} - {state.latencyMs} ms
+            API online
+            {/* The figure crowds the bar on a phone. */}
+            <span className="ml-2 hidden font-mono text-xs text-ink-muted sm:inline">
+              {state.latencyMs} ms
             </span>
           </>
         )}
         {state.kind === "offline" && (
           <>
-            API injoignable
-            <span className="ml-2 hidden text-slate-500 sm:inline">
+            API unreachable
+            <span className="ml-2 hidden text-ink-muted sm:inline">
               {state.message}
             </span>
           </>
@@ -55,9 +49,9 @@ export function ApiStatus() {
         <button
           type="button"
           onClick={refresh}
-          className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none dark:text-slate-400 dark:hover:bg-slate-800"
+          className="rounded-full px-3 py-1 text-ink-muted hover:bg-card hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
         >
-          Reessayer
+          Retry
         </button>
       )}
     </div>

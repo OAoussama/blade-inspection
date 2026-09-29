@@ -12,3 +12,4 @@ ml/**/__pycache__/
 *.pt
 *.zip
 runs/
+frontend/SPEC_turbine_selection.md

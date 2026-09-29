@@ -1,44 +1,45 @@
 // frontend/src/components/DetectionOverlay.tsx
-// Les bbox étant normalisées, un viewBox 0 0 1 1 suffit : le SVG se met
-// à l'échelle tout seul, quelle que soit la taille d'affichage. Aucun
-// calcul de ratio, aucun listener de resize.
+// Because the boxes are normalised, a 0 0 1 1 viewBox is enough: the SVG
+// scales itself whatever the rendered size. No ratio maths, no resize listener.
 
 "use client";
 
 import { imageFileUrl, type InspectionImage, type Severity } from "@/lib/services/inspections";
 
-const STROKE: Record<Severity, string> = {
-  low: "#38bdf8",
-  medium: "#facc15",
-  high: "#fb923c",
-  critical: "#ef4444",
+// Severity resolves to a CSS variable rather than a literal, so the scale
+// follows the active theme without this component knowing which one is on.
+const SEVERITY_COLOR: Record<Severity, string> = {
+  low: "var(--sev-low)",
+  medium: "var(--sev-medium)",
+  high: "var(--sev-high)",
+  critical: "var(--sev-critical)",
 };
 
-// Chaque badge porte son libellé en texte : une pastille de couleur seule
-// serait indéchiffrable en vision daltonienne.
+// Every badge carries its label in words: a coloured dot on its own is
+// unreadable for part of the audience.
 const SEVERITY_LABEL: Record<Severity, string> = {
-  low: "Faible",
-  medium: "Moyenne",
-  high: "Élevée",
-  critical: "Critique",
-};
-
-const SEVERITY_BADGE: Record<Severity, string> = {
-  low: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200",
-  medium: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  high: "bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200",
-  critical: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  critical: "Critical",
 };
 
 export function DetectionOverlay({ image }: { image: InspectionImage }) {
   return (
-    <figure className="space-y-2">
-      <div className="relative overflow-hidden rounded-lg border border-slate-200">
+    <figure className="flex flex-col gap-3">
+      <div className="relative overflow-hidden rounded-card bg-sunken">
+        {/* width/height come from the API and reserve the right box before
+            the file arrives, so the results list does not jump as each photo
+            loads. lazy: an inspection may carry up to 50 images. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageFileUrl(image.id)}
-          alt={image.original_filename ?? "Image d'inspection"}
-          className="block w-full"
+          alt={image.original_filename ?? "Inspection image"}
+          width={image.width}
+          height={image.height}
+          loading="lazy"
+          decoding="async"
+          className="block h-auto w-full"
         />
 
         <svg
@@ -55,9 +56,9 @@ export function DetectionOverlay({ image }: { image: InspectionImage }) {
               width={d.bbox_w}
               height={d.bbox_h}
               fill="none"
-              stroke={STROKE[d.severity]}
-              // vectorEffect empêche le trait d'être étiré par le viewBox :
-              // sans lui, les bordures apparaissent déformées.
+              stroke={SEVERITY_COLOR[d.severity]}
+              // vectorEffect stops the viewBox from stretching the stroke:
+              // without it the borders render distorted.
               vectorEffect="non-scaling-stroke"
               strokeWidth={2}
             />
@@ -65,19 +66,36 @@ export function DetectionOverlay({ image }: { image: InspectionImage }) {
         </svg>
       </div>
 
-      <figcaption className="text-sm text-slate-600 dark:text-slate-400">
+      <figcaption className="text-sm text-ink-muted">
         {image.detections.length === 0 ? (
-          "Aucun dommage détecté"
+          "No damage detected"
         ) : (
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex flex-col gap-2">
             {image.detections.map((d) => (
               <li
                 key={d.id}
-                className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ${SEVERITY_BADGE[d.severity]}`}
+                className="flex items-center gap-3 rounded-card bg-card px-3.5 py-2.5"
               >
-                <span className="font-medium">{d.damage_class}</span>
-                <span>· {SEVERITY_LABEL[d.severity]}</span>
-                <span className="opacity-75">{Math.round(d.confidence * 100)} %</span>
+                <span
+                  aria-hidden="true"
+                  className="w-1 self-stretch rounded-full"
+                  style={{ background: SEVERITY_COLOR[d.severity] }}
+                />
+                <span className="grow text-sm font-semibold text-ink">
+                  {d.damage_class}
+                </span>
+                <span
+                  className="rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide"
+                  style={{
+                    background: SEVERITY_COLOR[d.severity],
+                    color: "var(--on-sev)",
+                  }}
+                >
+                  {SEVERITY_LABEL[d.severity].toUpperCase()}
+                </span>
+                <span className="w-12 text-right font-mono text-sm text-ink-soft tabular-nums">
+                  {Math.round(d.confidence * 100)}%
+                </span>
               </li>
             ))}
           </ul>

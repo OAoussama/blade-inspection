@@ -39,7 +39,7 @@ export function useTurbines() {
         }
         setState({
           kind: "error",
-          message: error instanceof ApiError ? error.message : "Erreur inattendue",
+          message: error instanceof ApiError ? error.message : "Unexpected error",
         });
       }
     }

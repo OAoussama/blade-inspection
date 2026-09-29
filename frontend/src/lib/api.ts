@@ -11,7 +11,7 @@ if (!BASE_URL) {
   // autant echouer tout de suite avec un message clair plutot que de voir
   // des requetes partir vers "undefined/health".
   throw new Error(
-    "NEXT_PUBLIC_API_URL est absente. Ajoute-la dans frontend/.env.local"
+    "NEXT_PUBLIC_API_URL is missing. Add it to frontend/.env.local"
   );
 }
 
@@ -53,7 +53,7 @@ export async function apiFetch<T>(
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error;
     }
-    throw new ApiError("Impossible de joindre l'API. Est-elle demarree ?");
+    throw new ApiError("Could not reach the API. Is it running?");
   }
 
   if (!response.ok) {
@@ -62,7 +62,7 @@ export async function apiFetch<T>(
       .json()
       .then((body) => body?.detail)
       .catch(() => null);
-    throw new ApiError(detail ?? `Erreur HTTP ${response.status}`, response.status);
+    throw new ApiError(detail ?? `HTTP error ${response.status}`, response.status);
   }
 
   return response.json() as Promise<T>;
